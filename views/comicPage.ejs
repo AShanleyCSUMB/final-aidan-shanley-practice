@@ -1,0 +1,43 @@
+<%- include("partials/header") %>
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 mb-1"><%= site.site_name %> Comics</h1>
+    <a href="<%= site.site_url %>" target="_blank" class="text-decoration-none"><%= site.site_url %></a>
+  </div>
+  <a href="/" class="btn btn-outline-primary">Back Home</a>
+</div>
+
+<div class="row g-4">
+  <% comics.forEach(comic => { %>
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border-0">
+        <img src="<%= comic.comic_url %>" class="card-img-top comic-card-img" alt="<%= comic.title %>">
+        <div class="card-body">
+          <h2 class="h5"><%= comic.title %></h2>
+          <p class="text-muted mb-3"><%= comic.comic_date %></p>
+          <div class="d-flex gap-3">
+            <a href="/addComment/<%= comic.comic_id %>" class="text-decoration-none">Add Comment</a>
+            <a href="#" class="text-decoration-none view-comments-link" data-comic-id="<%= comic.comic_id %>">View Comments</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<div class="modal fade" id="commentsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Comic Comments</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="commentsModalBody">
+        Loading...
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include("partials/footer") %>
