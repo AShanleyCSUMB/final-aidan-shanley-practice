@@ -12,7 +12,7 @@
         <div class="list-group list-group-flush">
           <% sites.forEach(site => { %>
             <div class="list-group-item px-0">
-              <a href="/comic/<%= site.site_id %>" class="comic-site-link d-block fw-semibold text-decoration-none">
+              <a href="/comic/<%= site.site_id %>" class="d-block fw-semibold text-decoration-none">
                 <%= site.site_name %>
               </a>
               <a href="<%= site.site_url %>" target="_blank" class="small text-muted text-decoration-none">
@@ -27,28 +27,35 @@
 
   <div class="col-lg-7">
     <div class="card shadow-sm border-0 h-100">
-      <div class="card-body random-comic-card">
+      <div class="card-body text-center">
         <h2 class="h4 mb-3">Random Comic</h2>
 
-        <div id="randomComicWrap">
-          <% if (randomComic) { %>
-            <h3 id="randomComicSiteName" class="h5 text-center mb-3"><%= randomComic.site_name %></h3>
-            <img
-              id="randomComicImage"
-              src="<%= randomComic.comic_url %>"
-              alt="<%= randomComic.title %>"
-              class="img-fluid rounded shadow-sm comic-image"
-            >
-            <p id="randomComicTitle" class="text-center mt-3 mb-1 fw-semibold"><%= randomComic.title %></p>
-            <p id="randomComicDate" class="text-center text-muted"><%= randomComic.comic_date %></p>
-          <% } else { %>
-            <p>No comics found.</p>
-          <% } %>
-        </div>
+        <% if (randomComic) { %>
+          <h3 id="randomComicSiteName" class="h5 mb-3"><%= randomComic.site_name %></h3>
 
-        <div class="text-center mt-3">
-          <button id="btnRandomComic" class="btn btn-success">Display Random Comic</button>
-        </div>
+          <img
+            id="randomComicImage"
+            src="<%= randomComic.comic_url %>"
+            alt="<%= randomComic.title %>"
+            class="img-fluid rounded mb-3"
+          >
+
+          <p id="randomComicTitle" class="fw-semibold mb-1"><%= randomComic.title %></p>
+          <p id="randomComicDate" class="text-muted"><%= randomComic.comic_date %></p>
+        <% } else { %>
+          <p id="randomComicSiteName" class="h5 mb-3"></p>
+          <img
+            id="randomComicImage"
+            src=""
+            alt=""
+            class="img-fluid rounded mb-3"
+            style="display:none;"
+          >
+          <p id="randomComicTitle" class="fw-semibold mb-1">No comics found.</p>
+          <p id="randomComicDate" class="text-muted"></p>
+        <% } %>
+
+        <button id="btnRandomComic" class="btn btn-success">Display Random Comic</button>
       </div>
     </div>
   </div>

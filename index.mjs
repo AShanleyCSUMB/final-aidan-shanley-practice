@@ -18,13 +18,13 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
+  host: process.env.DB_HOST || "127.0.0.1",
+  port: Number(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  connectionLimit: 10,
   waitForConnections: true,
+  connectionLimit: 10,
   queueLimit: 0
 });
 
@@ -34,27 +34,35 @@ async function query(sql, params = []) {
 }
 
 // Assumed columns:
-// fe_comics_sites: site_id, site_name, site_url
-// fe_comics: comic_id, site_id, title, comic_date, comic_url
+// fe_comic_sites: site_id, site_name, site_url
+// fe_comic: comic_id, site_id, title, comic_date, comic_url
 // fe_comments: comment_id, comic_id, author, comment_date, comment
 // If your SQL names differ, update the SELECT/INSERT fields below.
 
 app.get("/", async (req, res) => {
   try {
     const sites = await query(`
-      SELECT site_id, site_name, site_url
-      FROM fe_comics_sites
-      ORDER BY site_name
-    `);
+  SELECT
+    comicSiteId AS site_id,
+    comicSiteName AS site_name,
+    comicSiteUrl AS site_url
+  FROM fe_comic_sites
+  ORDER BY comicSiteName
+`);
 
-    const randomComicRows = await query(`
-      SELECT c.comic_id, c.title, c.comic_date, c.comic_url,
-             s.site_id, s.site_name
-      FROM fe_comics c
-      JOIN fe_comics_sites s ON c.site_id = s.site_id
-      ORDER BY RAND()
-      LIMIT 1
-    `);
+const randomComicRows = await query(`
+  SELECT
+    c.comicId AS comic_id,
+    c.comicTitle AS title,
+    c.comicDate AS comic_date,
+    c.comicUrl AS comic_url,
+    s.comicSiteId AS site_id,
+    s.comicSiteName AS site_name
+  FROM fe_comics c
+  JOIN fe_comic_sites s ON c.comicSiteId = s.comicSiteId
+  ORDER BY RAND()
+  LIMIT 1
+`);
 
     const randomComic = randomComicRows[0] || null;
 
@@ -68,10 +76,12 @@ app.get("/", async (req, res) => {
 app.get("/addComic", async (req, res) => {
   try {
     const sites = await query(`
-      SELECT site_id, site_name, site_url
-      FROM fe_comics_sites
-      ORDER BY site_name
-    `);
+  SELECT
+    comicSiteId AS site_id,
+    comicSiteName AS site_name
+  FROM fe_comic_sites
+  ORDER BY comicSiteName
+`);
     res.render("addComic", { sites, error: null, success: null });
   } catch (err) {
     console.error(err);
@@ -84,10 +94,12 @@ app.post("/addComic", async (req, res) => {
 
   try {
     const sites = await query(`
-      SELECT site_id, site_name, site_url
-      FROM fe_comics_sites
-      ORDER BY site_name
-    `);
+  SELECT
+    comicSiteId AS site_id,
+    comicSiteName AS site_name
+  FROM fe_comic_sites
+  ORDER BY comicSiteName
+`);
 
     if (!title || !comic_date || !comic_url || !site_id) {
       return res.render("addComic", {
@@ -98,10 +110,10 @@ app.post("/addComic", async (req, res) => {
     }
 
     await query(
-      `INSERT INTO fe_comics (title, comic_date, comic_url, site_id)
-       VALUES (?, ?, ?, ?)`,
-      [title, comic_date, comic_url, site_id]
-    );
+  `INSERT INTO fe_comics (comicTitle, comicDate, comicUrl, comicSiteId)
+   VALUES (?, ?, ?, ?)`,
+  [title, comic_date, comic_url, site_id]
+);
 
     res.render("addComic", {
       sites,
@@ -119,21 +131,30 @@ app.get("/comic/:siteId", async (req, res) => {
 
   try {
     const siteRows = await query(
-      `SELECT site_id, site_name, site_url FROM fe_comics_sites WHERE site_id = ?`,
-      [siteId]
-    );
+  `SELECT
+      comicSiteId AS site_id,
+      comicSiteName AS site_name,
+      comicSiteUrl AS site_url
+   FROM fe_comic_sites
+   WHERE comicSiteId = ?`,
+  [siteId]
+);
 
     if (!siteRows.length) {
       return res.status(404).send("Comic site not found.");
     }
 
     const comics = await query(
-      `SELECT comic_id, title, comic_date, comic_url
-       FROM fe_comics
-       WHERE site_id = ?
-       ORDER BY comic_date DESC, comic_id DESC`,
-      [siteId]
-    );
+  `SELECT
+      comicId AS comic_id,
+      comicTitle AS title,
+      comicDate AS comic_date,
+      comicUrl AS comic_url
+   FROM fe_comics
+   WHERE comicSiteId = ?
+   ORDER BY comicDate DESC, comicId DESC`,
+  [siteId]
+);
 
     res.render("comicPage", {
       site: siteRows[0],
@@ -150,12 +171,17 @@ app.get("/addComment/:comicId", async (req, res) => {
 
   try {
     const comicRows = await query(
-      `SELECT c.comic_id, c.title, c.comic_date, c.comic_url, s.site_name
-       FROM fe_comics c
-       JOIN fe_comics_sites s ON c.site_id = s.site_id
-       WHERE c.comic_id = ?`,
-      [comicId]
-    );
+  `SELECT
+      c.comicId AS comic_id,
+      c.comicTitle AS title,
+      c.comicDate AS comic_date,
+      c.comicUrl AS comic_url,
+      s.comicSiteName AS site_name
+   FROM fe_comics c
+   JOIN fe_comic_sites s ON c.comicSiteId = s.comicSiteId
+   WHERE c.comicId = ?`,
+  [comicId]
+);
 
     if (!comicRows.length) {
       return res.status(404).send("Comic not found.");
@@ -178,12 +204,17 @@ app.post("/addComment/:comicId", async (req, res) => {
 
   try {
     const comicRows = await query(
-      `SELECT c.comic_id, c.title, c.comic_date, c.comic_url, s.site_name
-       FROM fe_comics c
-       JOIN fe_comics_sites s ON c.site_id = s.site_id
-       WHERE c.comic_id = ?`,
-      [comicId]
-    );
+  `SELECT
+      c.comicId AS comic_id,
+      c.comicTitle AS title,
+      c.comicDate AS comic_date,
+      c.comicUrl AS comic_url,
+      s.comicSiteName AS site_name
+   FROM fe_comics c
+   JOIN fe_comic_sites s ON c.comicSiteId = s.comicSiteId
+   WHERE c.comicId = ?`,
+  [comicId]
+);
 
     if (!comicRows.length) {
       return res.status(404).send("Comic not found.");
@@ -218,13 +249,18 @@ app.post("/addComment/:comicId", async (req, res) => {
 app.get("/api/random-comic", async (req, res) => {
   try {
     const rows = await query(`
-      SELECT c.comic_id, c.title, c.comic_date, c.comic_url,
-             s.site_id, s.site_name
-      FROM fe_comics c
-      JOIN fe_comics_sites s ON c.site_id = s.site_id
-      ORDER BY RAND()
-      LIMIT 1
-    `);
+  SELECT
+    c.comicId AS comic_id,
+    c.comicTitle AS title,
+    c.comicDate AS comic_date,
+    c.comicUrl AS comic_url,
+    s.comicSiteId AS site_id,
+    s.comicSiteName AS site_name
+  FROM fe_comics c
+  JOIN fe_comic_sites s ON c.comicSiteId = s.comicSiteId
+  ORDER BY RAND()
+  LIMIT 1
+`);
 
     res.json(rows[0] || null);
   } catch (err) {

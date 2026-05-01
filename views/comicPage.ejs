@@ -12,13 +12,20 @@
   <% comics.forEach(comic => { %>
     <div class="col-md-6">
       <div class="card h-100 shadow-sm border-0">
-        <img src="<%= comic.comic_url %>" class="card-img-top comic-card-img" alt="<%= comic.title %>">
+        <img src="<%= comic.comic_url %>" class="card-img-top" alt="<%= comic.title %>">
         <div class="card-body">
           <h2 class="h5"><%= comic.title %></h2>
           <p class="text-muted mb-3"><%= comic.comic_date %></p>
+
           <div class="d-flex gap-3">
             <a href="/addComment/<%= comic.comic_id %>" class="text-decoration-none">Add Comment</a>
-            <a href="#" class="text-decoration-none view-comments-link" data-comic-id="<%= comic.comic_id %>">View Comments</a>
+            <a
+              href="#"
+              class="text-decoration-none view-comments-link"
+              data-comic-id="<%= comic.comic_id %>"
+            >
+              View Comments
+            </a>
           </div>
         </div>
       </div>
