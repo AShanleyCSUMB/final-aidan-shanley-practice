@@ -23,7 +23,9 @@ const pool = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  connectionLimit: 10
+  connectionLimit: 10,
+  waitForConnections: true,
+  queueLimit: 0
 });
 
 async function query(sql, params = []) {
@@ -66,7 +68,7 @@ app.get("/", async (req, res) => {
 app.get("/addComic", async (req, res) => {
   try {
     const sites = await query(`
-      SELECT site_id, site_name
+      SELECT site_id, site_name, site_url
       FROM fe_comics_sites
       ORDER BY site_name
     `);
@@ -82,7 +84,7 @@ app.post("/addComic", async (req, res) => {
 
   try {
     const sites = await query(`
-      SELECT site_id, site_name
+      SELECT site_id, site_name, site_url
       FROM fe_comics_sites
       ORDER BY site_name
     `);
@@ -253,5 +255,5 @@ app.get("/api/comments/:comicId", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Express server running on http://localhost:${PORT}`);
 });
